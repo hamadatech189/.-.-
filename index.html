@@ -1,0 +1,441 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>المكتبة | بوابتك المجانية للكتب الدراسية والعلمية والشرعية</title>
+  <meta name="description" content="المكتبة - منصة عربية مجانية للوصول السريع إلى الكتب الدراسية والعلوم العامة والكتب الدينية بدون إعلانات." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+  <!-- شاشة التحميل الأولية -->
+  <div id="app-loader" class="app-loader" aria-live="polite">
+    <div class="loader-card">
+      <div class="spinner"></div>
+      <p>جاري تحميل المكتبة...</p>
+    </div>
+  </div>
+
+  <!-- تنبيه عند نسيان إضافة مفتاح Supabase -->
+  <div id="config-warning" class="config-warning hidden" role="alert">
+    <div class="config-warning-inner">
+      <strong>تنبيه مهم لإعداد الموقع:</strong>
+      <span>لم تقم بعد بلصق مفتاح Supabase العام (Anon / Publishable Key) داخل ملف <code>js/config.js</code>. راجع ملف <code>README_AR.txt</code> للخطوات.</span>
+    </div>
+  </div>
+
+  <!-- الإشعارات العائمة (Toast) -->
+  <div id="toast-container" class="toast-container" aria-live="polite"></div>
+
+  <!-- ==================== 1. شاشة تسجيل الدخول وإنشاء الحساب ==================== -->
+  <main id="auth-view" class="auth-view hidden">
+    <div class="auth-shell">
+      <section class="auth-hero">
+        <div class="brand-badge">
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path>
+            <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path>
+          </svg>
+          <span>المكتبة</span>
+        </div>
+        <h1>مكتبتك الشاملة في مكان واحد</h1>
+        <p class="auth-hero-desc">
+          وصول سريع وسلس للكتب الدراسية (ابتدائي، إعدادي، ثانوي)، وكتب العلوم العامة، والكتب الدينية والشرعية — مجاناً بالكامل وبدون إعلانات.
+        </p>
+        <ul class="hero-features">
+          <li>قراءة مباشرة داخل الموقع أو تحميل فوري بصيغة PDF</li>
+          <li>تصنيف منظم حسب القسم والصف الدراسي مع بحث فوري</li>
+          <li>متاحة للطلاب والخريجين والمهتمين بالعلم الشرعي والثقافة العامة</li>
+        </ul>
+      </section>
+
+      <section class="auth-card" aria-label="تسجيل الدخول وإنشاء الحساب">
+        <div class="auth-tabs" role="tablist">
+          <button type="button" id="tab-login" class="auth-tab active" role="tab" aria-selected="true">تسجيل الدخول</button>
+          <button type="button" id="tab-signup" class="auth-tab" role="tab" aria-selected="false">إنشاء حساب جديد</button>
+        </div>
+
+        <!-- نموذج تسجيل الدخول -->
+        <form id="login-form" class="auth-form" novalidate>
+          <div class="form-group">
+            <label for="login-phone">رقم الهاتف</label>
+            <input type="tel" id="login-phone" name="phone" placeholder="مثال: 01012345678" autocomplete="tel" required />
+          </div>
+
+          <div class="form-group">
+            <label for="login-password">كلمة المرور</label>
+            <input type="password" id="login-password" name="password" placeholder="أدخل كلمة المرور" autocomplete="current-password" required />
+          </div>
+
+          <button type="submit" id="login-submit" class="btn btn-primary btn-block">
+            دخول إلى المكتبة
+          </button>
+        </form>
+
+        <!-- نموذج إنشاء حساب جديد -->
+        <form id="signup-form" class="auth-form hidden" novalidate>
+          <div class="form-row">
+            <div class="form-group">
+              <label for="signup-first-name">الاسم الأول <span class="req">*</span></label>
+              <input type="text" id="signup-first-name" name="first_name" placeholder="مثال: أحمد" required />
+            </div>
+            <div class="form-group">
+              <label for="signup-last-name">اسم العائلة <span class="req">*</span></label>
+              <input type="text" id="signup-last-name" name="last_name" placeholder="مثال: محمد" required />
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="signup-phone">رقم الهاتف <span class="req">*</span></label>
+            <input type="tel" id="signup-phone" name="phone" placeholder="مثال: 01012345678" autocomplete="tel" required />
+            <small class="field-hint">ستستخدم رقم الهاتف مع كلمة المرور لتسجيل الدخول لاحقاً.</small>
+          </div>
+
+          <div class="form-group">
+            <label for="signup-email">البريد الإلكتروني (Gmail) <span class="opt">(اختياري)</span></label>
+            <input type="email" id="signup-email" name="contact_email" placeholder="example@gmail.com" autocomplete="email" />
+          </div>
+
+          <div class="form-group">
+            <label for="signup-grade">الصف الدراسي أو الحالة <span class="req">*</span></label>
+            <select id="signup-grade" name="grade" required>
+              <option value="">اختر الصف الدراسي أو خريج...</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label for="signup-password">كلمة المرور <span class="req">*</span></label>
+            <input type="password" id="signup-password" name="password" placeholder="6 أحرف أو أرقام على الأقل" autocomplete="new-password" minlength="6" required />
+          </div>
+
+          <button type="submit" id="signup-submit" class="btn btn-primary btn-block">
+            إنشاء الحساب والدخول
+          </button>
+        </form>
+      </section>
+    </div>
+  </main>
+
+  <!-- ==================== 2. واجهة المكتبة الرئيسية (بعد تسجيل الدخول) ==================== -->
+  <div id="app-view" class="app-view hidden">
+    <!-- الشريط العلوي -->
+    <header class="navbar">
+      <div class="container navbar-inner">
+        <div class="navbar-brand">
+          <div class="logo-icon">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path>
+              <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path>
+            </svg>
+          </div>
+          <div>
+            <span class="brand-name">المكتبة</span>
+            <span class="brand-sub">اقرأ وتعلم بسهولة</span>
+          </div>
+        </div>
+
+        <div class="navbar-actions">
+          <div class="user-pill" id="user-pill">
+            <span id="user-greeting">مرحباً</span>
+            <span id="user-grade-badge" class="grade-chip"></span>
+          </div>
+
+          <button type="button" id="open-admin-btn" class="btn btn-accent hidden">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <circle cx="12" cy="12" r="3"></circle>
+              <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9c.26.6.85 1 1.51 1H21a2 2 0 1 1 0 4h-.09c-.66 0-1.25.4-1.51 1z"></path>
+            </svg>
+            <span>لوحة التحكم</span>
+          </button>
+
+          <button type="button" id="theme-toggle" class="icon-btn" title="تبديل الوضع الليلي" aria-label="تبديل الوضع الليلي">
+            <svg id="theme-icon-moon" width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+            </svg>
+            <svg id="theme-icon-sun" class="hidden" width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <circle cx="12" cy="12" r="5"></circle>
+              <line x1="12" y1="1" x2="12" y2="3"></line>
+              <line x1="12" y1="21" x2="12" y2="23"></line>
+              <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+              <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+              <line x1="1" y1="12" x2="3" y2="12"></line>
+              <line x1="21" y1="12" x2="23" y2="12"></line>
+              <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+              <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+            </svg>
+          </button>
+
+          <button type="button" id="logout-btn" class="btn btn-outline">خروج</button>
+        </div>
+      </div>
+    </header>
+
+    <!-- المحتوى الرئيسي -->
+    <main class="container main-content">
+      <!-- قسم البحث والترحيب -->
+      <section class="library-hero">
+        <div class="library-hero-text">
+          <h1>ابحث عن كتابك واقرأه فوراً</h1>
+          <p>جميع الكتب الدراسية والعلمية والشرعية متاحة لك مجاناً بدون إعلانات.</p>
+        </div>
+        <div class="search-box">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <circle cx="11" cy="11" r="8"></circle>
+            <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+          </svg>
+          <input type="search" id="book-search" placeholder="ابحث باسم الكتاب، المادة، أو المؤلف..." />
+        </div>
+      </section>
+
+      <!-- شريط الفلاتر -->
+      <section class="filters-bar" aria-label="تصنيف الكتب">
+        <div class="category-pills" id="category-pills">
+          <button type="button" class="pill active" data-category="all">كل الكتب</button>
+          <button type="button" class="pill" data-category="study">كتب دراسية</button>
+          <button type="button" class="pill" data-category="general">علوم عامة</button>
+          <button type="button" class="pill" data-category="religious">كتب دينية</button>
+        </div>
+
+        <div class="grade-filter-wrap">
+          <select id="grade-filter" aria-label="تصفية حسب الصف الدراسي">
+            <option value="all">كل الصفوف والمراحل</option>
+          </select>
+          <button type="button" id="my-grade-btn" class="btn btn-soft" title="عرض الكتب المناسبة لصفك الدراسي">
+            مناسب لصفي
+          </button>
+        </div>
+      </section>
+
+      <!-- عداد النتائج -->
+      <div class="results-meta">
+        <span id="books-count">جاري تحميل الكتب...</span>
+        <button type="button" id="reset-filters-btn" class="link-btn hidden">إعادة ضبط الفلاتر</button>
+      </div>
+
+      <!-- شبكة الكتب -->
+      <section id="books-grid" class="books-grid" aria-live="polite"></section>
+
+      <!-- حالة عدم وجود كتب -->
+      <section id="empty-state" class="empty-state hidden">
+        <div class="empty-icon">
+          <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path>
+            <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path>
+          </svg>
+        </div>
+        <h3>لا توجد كتب مطابقة حالياً</h3>
+        <p id="empty-state-desc">جرّب تغيير كلمة البحث أو اختيار قسم آخر.</p>
+      </section>
+    </main>
+
+    <!-- ==================== الفوتر وبيانات التواصل ==================== -->
+    <footer class="site-footer">
+      <div class="container footer-inner">
+        <div class="footer-brand">
+          <strong>المكتبة</strong>
+          <p>مشروع تعليمي مجاني لتسهيل الوصول إلى الكتب للطلاب والباحثين عن العلم.</p>
+        </div>
+
+        <div class="footer-contact">
+          <span class="contact-label">تواصل مع مالك المكتبة:</span>
+          <div class="contact-icons">
+            <a id="contact-phone-link" href="tel:+201011439841" class="social-btn social-phone" title="اتصال هاتفي" aria-label="اتصال هاتفي">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path>
+              </svg>
+              <span>اتصال</span>
+            </a>
+
+            <a id="contact-whatsapp-link" href="https://wa.me/201011439841" target="_blank" rel="noopener noreferrer" class="social-btn social-whatsapp" title="تواصل عبر واتساب" aria-label="واتساب">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"></path>
+              </svg>
+              <span>واتساب</span>
+            </a>
+
+            <a id="contact-facebook-link" href="https://www.facebook.com/hmadh.bd.alftah.707265" target="_blank" rel="noopener noreferrer" class="social-btn social-facebook" title="صفحة فيسبوك" aria-label="فيسبوك">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"></path>
+              </svg>
+              <span>فيسبوك</span>
+            </a>
+          </div>
+        </div>
+      </div>
+    </footer>
+  </div>
+
+  <!-- ==================== 3. نافذة قراءة كتاب PDF داخل الموقع ==================== -->
+  <div id="reader-modal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="reader-title">
+    <div class="modal-backdrop" data-close="reader-modal"></div>
+    <div class="modal-content modal-reader">
+      <div class="modal-header">
+        <div class="reader-meta">
+          <h2 id="reader-title">قراءة الكتاب</h2>
+          <span id="reader-subtitle" class="reader-subtitle"></span>
+        </div>
+        <div class="reader-actions">
+          <a id="reader-download-btn" href="#" target="_blank" rel="noopener noreferrer" class="btn btn-primary btn-sm">تحميل PDF</a>
+          <a id="reader-external-btn" href="#" target="_blank" rel="noopener noreferrer" class="btn btn-outline btn-sm">فتح في نافذة جديدة</a>
+          <button type="button" class="icon-btn" data-close="reader-modal" aria-label="إغلاق">✕</button>
+        </div>
+      </div>
+      <div class="reader-body">
+        <iframe id="reader-iframe" title="عارض ملف PDF" allow="autoplay"></iframe>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== 4. لوحة تحكم المالك فقط ==================== -->
+  <div id="admin-modal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="admin-modal-title">
+    <div class="modal-backdrop" data-close="admin-modal"></div>
+    <div class="modal-content modal-admin">
+      <div class="modal-header">
+        <div>
+          <h2 id="admin-modal-title">لوحة تحكم المالك</h2>
+          <p class="modal-subtitle">إضافة وتعديل وحذف الكتب ومتابعة الأعضاء المسجلين</p>
+        </div>
+        <button type="button" class="icon-btn" data-close="admin-modal" aria-label="إغلاق">✕</button>
+      </div>
+
+      <!-- إحصائيات سريعة -->
+      <div class="admin-stats">
+        <div class="stat-card">
+          <span class="stat-label">إجمالي الكتب</span>
+          <strong id="stat-total-books">0</strong>
+        </div>
+        <div class="stat-card">
+          <span class="stat-label">كتب دراسية</span>
+          <strong id="stat-study-books">0</strong>
+        </div>
+        <div class="stat-card">
+          <span class="stat-label">علوم عامة</span>
+          <strong id="stat-general-books">0</strong>
+        </div>
+        <div class="stat-card">
+          <span class="stat-label">كتب دينية</span>
+          <strong id="stat-religious-books">0</strong>
+        </div>
+        <div class="stat-card">
+          <span class="stat-label">المستخدمون</span>
+          <strong id="stat-total-users">0</strong>
+        </div>
+      </div>
+
+      <!-- تبويبات لوحة التحكم -->
+      <div class="admin-tabs">
+        <button type="button" class="admin-tab active" data-admin-tab="add-book">إضافة / تعديل كتاب</button>
+        <button type="button" class="admin-tab" data-admin-tab="manage-books">إدارة الكتب</button>
+        <button type="button" class="admin-tab" data-admin-tab="users-list">المستخدمون المسجلون</button>
+      </div>
+
+      <div class="admin-body">
+        <!-- تبويب إضافة / تعديل كتاب -->
+        <section id="admin-tab-add-book" class="admin-panel">
+          <form id="book-form" class="admin-form" novalidate>
+            <input type="hidden" id="book-id" value="" />
+
+            <div class="form-row">
+              <div class="form-group">
+                <label for="book-title">اسم الكتاب <span class="req">*</span></label>
+                <input type="text" id="book-title" placeholder="مثال: كتاب الفيزياء - الصف الثالث الثانوي" required />
+              </div>
+              <div class="form-group">
+                <label for="book-author">المؤلف أو المادة</label>
+                <input type="text" id="book-author" placeholder="مثال: وزارة التربية والتعليم / د. مصطفى محمود" />
+              </div>
+            </div>
+
+            <div class="form-row">
+              <div class="form-group">
+                <label for="book-category">القسم <span class="req">*</span></label>
+                <select id="book-category" required>
+                  <option value="study">كتب دراسية</option>
+                  <option value="general">علوم عامة</option>
+                  <option value="religious">كتب دينية</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label for="book-grade">الصف الدراسي المستهدف</label>
+                <select id="book-grade">
+                  <option value="عام للجميع">عام للجميع</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label for="book-drive-url">رابط ملف PDF على Google Drive <span class="req">*</span></label>
+              <input type="url" id="book-drive-url" placeholder="https://drive.google.com/file/d/..." required />
+              <small class="field-hint">تأكد في Google Drive أن مشاركة الملف مضبوطة على: «أي شخص لديه الرابط - مشاهد (Viewer)».</small>
+            </div>
+
+            <div class="form-group">
+              <label for="book-cover-url">رابط صورة الغلاف <span class="opt">(اختياري)</span></label>
+              <input type="url" id="book-cover-url" placeholder="اتركه فارغاً لاستخدام غلاف أنيق تلقائي" />
+            </div>
+
+            <div class="form-group">
+              <label for="book-description">وصف مختصر للكتاب</label>
+              <textarea id="book-description" rows="3" placeholder="نبذة سريعة عن محتوى الكتاب أو الفصل الدراسي..."></textarea>
+            </div>
+
+            <div class="form-actions">
+              <button type="submit" id="book-submit-btn" class="btn btn-primary">حفظ ونشر الكتاب</button>
+              <button type="button" id="book-cancel-edit-btn" class="btn btn-outline hidden">إلغاء التعديل</button>
+            </div>
+          </form>
+        </section>
+
+        <!-- تبويب إدارة الكتب -->
+        <section id="admin-tab-manage-books" class="admin-panel hidden">
+          <div class="table-wrap">
+            <table class="admin-table">
+              <thead>
+                <tr>
+                  <th>اسم الكتاب</th>
+                  <th>القسم</th>
+                  <th>الصف</th>
+                  <th>إجراءات</th>
+                </tr>
+              </thead>
+              <tbody id="admin-books-tbody"></tbody>
+            </table>
+          </div>
+        </section>
+
+        <!-- تبويب المستخدمون المسجلون -->
+        <section id="admin-tab-users-list" class="admin-panel hidden">
+          <div class="table-wrap">
+            <table class="admin-table">
+              <thead>
+                <tr>
+                  <th>الاسم</th>
+                  <th>رقم الهاتف</th>
+                  <th>الصف / الحالة</th>
+                  <th>الجيميل</th>
+                  <th>الدور</th>
+                </tr>
+              </thead>
+              <tbody id="admin-users-tbody"></tbody>
+            </table>
+          </div>
+        </section>
+      </div>
+    </div>
+  </div>
+
+  <!-- مكتبة Supabase الرسمية -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+  <!-- ملفات المشروع المقسمة والمنظمة -->
+  <script src="js/config.js"></script>
+  <script src="js/supabaseClient.js"></script>
+  <script src="js/auth.js"></script>
+  <script src="js/books.js"></script>
+  <script src="js/admin.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
